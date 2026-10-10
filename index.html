@@ -541,6 +541,106 @@
       transform: scale(0.96);
     }
 
+    /* ============================================================
+       PANEL LATERAL DE CLIENTES
+       ============================================================ */
+    .panel-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(43,47,54,0);
+      z-index: 1200;
+      pointer-events: none;
+      transition: background 0.3s ease;
+    }
+    .panel-overlay.show {
+      background: rgba(43,47,54,0.4);
+      pointer-events: auto;
+    }
+
+    .panel-lateral {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 82%;
+      max-width: 340px;
+      background: var(--bg);
+      z-index: 1210;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 28px rgba(43,47,54,0.18);
+    }
+    .panel-lateral.show {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 22px 14px;
+      border-bottom: 1px solid var(--shadow-dark);
+      flex-shrink: 0;
+    }
+    .panel-titulo {
+      font-family: 'Fraunces', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.2px;
+    }
+    .panel-cerrar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--card);
+      color: var(--ink-soft);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow:
+        -2px -2px 6px var(--shadow-light),
+        2px 2px 6px var(--shadow-dark);
+      transition: box-shadow 0.12s ease;
+    }
+    .panel-cerrar:active {
+      box-shadow:
+        inset -2px -2px 6px var(--shadow-light),
+        inset 2px 2px 6px var(--shadow-dark);
+    }
+
+    .panel-lista {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .panel-item {
+      padding: 15px 22px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      border-bottom: 1px solid var(--shadow-dark);
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .panel-item:active {
+      background: rgba(0,122,255,0.08);
+      color: var(--blue);
+    }
+    .panel-empty {
+      padding: 40px 22px;
+      color: var(--ink-soft);
+      font-size: 14px;
+      text-align: center;
+    }
+    .panel-lista::-webkit-scrollbar { width: 4px; }
+    .panel-lista::-webkit-scrollbar-track { background: transparent; }
+    .panel-lista::-webkit-scrollbar-thumb {
+      background: var(--shadow-dark);
+      border-radius: 4px;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
     }
@@ -553,7 +653,7 @@
         <span class="brand-name">Cicada</span>
         <span class="brand-mark">3301</span>
       </div>
-      <button class="icon-btn" onclick="mostrarHistorial()" aria-label="Historial">
+      <button class="icon-btn" onclick="abrirPanelClientes()" aria-label="Ver clientes">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
@@ -645,12 +745,29 @@
     </div>
   </div>
 
+  <!-- PANEL LATERAL DE CLIENTES -->
+  <div class="panel-overlay" id="panelOverlay" onclick="cerrarPanelClientes()"></div>
+  <aside class="panel-lateral" id="panelLateral">
+    <div class="panel-header">
+      <div class="panel-titulo">Clientes</div>
+      <button class="panel-cerrar" onclick="cerrarPanelClientes()" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <ul class="panel-lista" id="panelLista">
+      <li class="panel-empty">Cargando clientes...</li>
+    </ul>
+  </aside>
+
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbz1hZswWqWfMJRDmZtx_7iGqr-oexzTPlLPiTBRxvETsZHoft4SuQZ_spnfiIJ-SnLO/exec';
     let clienteActual = '';
 
     // ============================================================
-    // LLAMADA GENÉRICA AL BACKEND (reemplaza google.script.run)
+    // LLAMADA GENÉRICA AL BACKEND
     // ============================================================
     async function llamarAPI(action, payload) {
       const body = Object.assign({ action: action }, payload || {});
@@ -666,6 +783,61 @@
       } catch (err) {
         return { success: false, message: 'Error de conexión: ' + err };
       }
+    }
+
+    // ============================================================
+    // PANEL LATERAL DE CLIENTES
+    // ============================================================
+    async function abrirPanelClientes() {
+      const overlay = document.getElementById('panelOverlay');
+      const panel = document.getElementById('panelLateral');
+      const lista = document.getElementById('panelLista');
+
+      // Mostrar panel inmediatamente
+      overlay.classList.add('show');
+      panel.classList.add('show');
+
+      // Mostrar loading
+      lista.innerHTML = '<li class="panel-empty">Cargando clientes...</li>';
+
+      const response = await llamarAPI('obtenerClientes');
+
+      if (!response.success) {
+        lista.innerHTML = '<li class="panel-empty">Error: ' + response.message + '</li>';
+        return;
+      }
+
+      if (!response.clientes || response.clientes.length === 0) {
+        lista.innerHTML = '<li class="panel-empty">No hay clientes registrados.</li>';
+        return;
+      }
+
+      lista.innerHTML = '';
+      response.clientes.forEach(function(nombre) {
+        const li = document.createElement('li');
+        li.className = 'panel-item';
+        li.textContent = nombre;
+        li.addEventListener('click', function() {
+          seleccionarCliente(nombre);
+        });
+        lista.appendChild(li);
+      });
+    }
+
+    function cerrarPanelClientes() {
+      const overlay = document.getElementById('panelOverlay');
+      const panel = document.getElementById('panelLateral');
+      overlay.classList.remove('show');
+      panel.classList.remove('show');
+    }
+
+    function seleccionarCliente(nombre) {
+      // Poner el nombre en el buscador
+      document.getElementById('nombreInput').value = nombre;
+      // Cerrar el panel
+      cerrarPanelClientes();
+      // Cargar la deuda del cliente
+      cargarDeuda();
     }
 
     // ============================================================
@@ -908,10 +1080,6 @@
       toast.innerText = message;
       toast.className = 'toast show' + (isError ? ' error' : '');
       setTimeout(() => { toast.className = 'toast'; }, 3000);
-    }
-
-    function mostrarHistorial() {
-      showToast('Historial próximamente');
     }
 
     document.getElementById('fechaConsultaLabel').innerText = new Date().toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' });
