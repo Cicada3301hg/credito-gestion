@@ -45,7 +45,6 @@
       padding: 22px 20px 0;
     }
 
-    /* HEADER */
     header {
       position: relative;
       display: flex;
@@ -92,7 +91,6 @@
         inset 2px 2px 6px var(--shadow-dark);
     }
 
-    /* LOOKUP FIELD */
     .lookup { margin-bottom: 24px; }
 
     .lookup-field {
@@ -144,7 +142,6 @@
       transform: scale(0.85);
     }
 
-    /* LEDGER CARD */
     .ledger-card {
       background: var(--card);
       border-radius: 20px;
@@ -235,7 +232,6 @@
       color: var(--ink);
     }
 
-    /* PRODUCTS */
     .products-title {
       font-family: 'Fraunces', serif;
       font-size: 18px;
@@ -345,7 +341,6 @@
       border-bottom: 1px solid var(--shadow-dark);
     }
 
-    /* ACTION BAR */
     .action-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -455,7 +450,6 @@
       flex-shrink: 0;
     }
 
-    /* TOAST */
     .toast {
       position: fixed;
       top: 18px; left: 50%;
@@ -470,7 +464,6 @@
     .toast.error { background: var(--brick); }
     .toast.show { opacity: 1; }
 
-    /* MODAL DE CONFIRMACIÓN */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -541,9 +534,6 @@
       transform: scale(0.96);
     }
 
-    /* ============================================================
-       PANEL LATERAL DE CLIENTES
-       ============================================================ */
     .panel-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -746,7 +736,6 @@
     </div>
   </div>
 
-  <!-- PANEL LATERAL DE CLIENTES -->
   <div class="panel-overlay" id="panelOverlay" onclick="cerrarPanelClientes()"></div>
   <aside class="panel-lateral" id="panelLateral">
     <div class="panel-header">
@@ -768,9 +757,6 @@
     const CACHE_KEY = 'cicada_clientes_cache';
     let clienteActual = '';
 
-    // ============================================================
-    // LLAMADA GENÉRICA AL BACKEND
-    // ============================================================
     async function llamarAPI(action, payload) {
       const body = Object.assign({ action: action }, payload || {});
       try {
@@ -788,7 +774,7 @@
     }
 
     // ============================================================
-    // CACHÉ DE CLIENTES EN EL CELULAR
+    // CACHÉ DE CLIENTES
     // ============================================================
     function leerClientesCache() {
       try {
@@ -814,7 +800,7 @@
     }
 
     // ============================================================
-    // PANEL LATERAL DE CLIENTES (híbrido)
+    // PANEL LATERAL DE CLIENTES
     // ============================================================
     function renderizarListaClientes(clientes) {
       const lista = document.getElementById('panelLista');
@@ -937,7 +923,7 @@
     }
 
     // ============================================================
-    // GENERAR FACTURA (PDF)
+    // GENERAR FACTURA
     // ============================================================
     async function generarFactura() {
       if (!clienteActual) {
@@ -987,9 +973,6 @@
       }
     }
 
-    // ============================================================
-    // REVISAR SI LA LISTA QUEDÓ VACÍA
-    // ============================================================
     function revisarListaVacia() {
       const list = document.getElementById('productosList');
       if (list.querySelectorAll('.ledger-item').length === 0) {
@@ -999,7 +982,7 @@
     }
 
     // ============================================================
-    // ABONAR
+    // ABONAR (usa los totales que devuelve el backend)
     // ============================================================
     async function abonar() {
       if (!clienteActual) { showToast('Primero busca un cliente', true); return; }
@@ -1011,7 +994,13 @@
       if (response.success) {
         showToast(response.message);
         document.getElementById('abonoInput').value = '';
-        cargarDeuda();
+
+        // Actualizar SOLO los totales, sin volver a buscar productos.
+        if (typeof response.totalAbonos !== 'undefined') {
+          document.getElementById('totalAbonos').innerText = '₡' + (response.totalAbonos || 0).toLocaleString('es-CR');
+          document.getElementById('totalDeuda').innerText = '₡' + (response.totalDeuda || 0).toLocaleString('es-CR');
+          actualizarDonut(response.totalAbonos, response.totalDeuda);
+        }
       } else {
         showToast(response.message, true);
       }
@@ -1126,7 +1115,6 @@
     // ============================================================
     document.getElementById('fechaConsultaLabel').innerText = new Date().toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' });
 
-    // Precargar clientes al abrir la app (en segundo plano)
     precargarClientes();
   </script>
 
