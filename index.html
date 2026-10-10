@@ -645,7 +645,8 @@
       * { transition: none !important; animation: none !important; }
     }
   </style>
-</head><body>
+</head>
+<body>
 
   <div class="page">
     <header>
@@ -764,6 +765,7 @@
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbz1hZswWqWfMJRDmZtx_7iGqr-oexzTPlLPiTBRxvETsZHoft4SuQZ_spnfiIJ-SnLO/exec';
+    const CACHE_KEY = 'cicada_clientes_cache';
     let clienteActual = '';
 
     // ============================================================
@@ -786,34 +788,44 @@
     }
 
     // ============================================================
-    // PANEL LATERAL DE CLIENTES
+    // CACHÉ DE CLIENTES EN EL CELULAR
     // ============================================================
-    async function abrirPanelClientes() {
-      const overlay = document.getElementById('panelOverlay');
-      const panel = document.getElementById('panelLateral');
+    function leerClientesCache() {
+      try {
+        const data = localStorage.getItem(CACHE_KEY);
+        if (!data) return null;
+        return JSON.parse(data);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function guardarClientesCache(clientes) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(clientes));
+      } catch (e) {}
+    }
+
+    async function precargarClientes() {
+      const response = await llamarAPI('obtenerClientes');
+      if (response.success && response.clientes) {
+        guardarClientesCache(response.clientes);
+      }
+    }
+
+    // ============================================================
+    // PANEL LATERAL DE CLIENTES (híbrido)
+    // ============================================================
+    function renderizarListaClientes(clientes) {
       const lista = document.getElementById('panelLista');
 
-      // Mostrar panel inmediatamente
-      overlay.classList.add('show');
-      panel.classList.add('show');
-
-      // Mostrar loading
-      lista.innerHTML = '<li class="panel-empty">Cargando clientes...</li>';
-
-      const response = await llamarAPI('obtenerClientes');
-
-      if (!response.success) {
-        lista.innerHTML = '<li class="panel-empty">Error: ' + response.message + '</li>';
-        return;
-      }
-
-      if (!response.clientes || response.clientes.length === 0) {
+      if (!clientes || clientes.length === 0) {
         lista.innerHTML = '<li class="panel-empty">No hay clientes registrados.</li>';
         return;
       }
 
       lista.innerHTML = '';
-      response.clientes.forEach(function(nombre) {
+      clientes.forEach(function(nombre) {
         const li = document.createElement('li');
         li.className = 'panel-item';
         li.textContent = nombre;
@@ -824,6 +836,36 @@
       });
     }
 
+    async function abrirPanelClientes() {
+      const overlay = document.getElementById('panelOverlay');
+      const panel = document.getElementById('panelLateral');
+      const lista = document.getElementById('panelLista');
+
+      overlay.classList.add('show');
+      panel.classList.add('show');
+
+      const cache = leerClientesCache();
+      if (cache && cache.length > 0) {
+        renderizarListaClientes(cache);
+      } else {
+        lista.innerHTML = '<li class="panel-empty">Cargando clientes...</li>';
+      }
+
+      const response = await llamarAPI('obtenerClientes');
+
+      if (response.success && response.clientes) {
+        guardarClientesCache(response.clientes);
+
+        if (panel.classList.contains('show')) {
+          renderizarListaClientes(response.clientes);
+        }
+      } else if (!cache) {
+        if (panel.classList.contains('show')) {
+          lista.innerHTML = '<li class="panel-empty">Error al cargar clientes.</li>';
+        }
+      }
+    }
+
     function cerrarPanelClientes() {
       const overlay = document.getElementById('panelOverlay');
       const panel = document.getElementById('panelLateral');
@@ -832,11 +874,8 @@
     }
 
     function seleccionarCliente(nombre) {
-      // Poner el nombre en el buscador
       document.getElementById('nombreInput').value = nombre;
-      // Cerrar el panel
       cerrarPanelClientes();
-      // Cargar la deuda del cliente
       cargarDeuda();
     }
 
@@ -1082,7 +1121,13 @@
       setTimeout(() => { toast.className = 'toast'; }, 3000);
     }
 
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
     document.getElementById('fechaConsultaLabel').innerText = new Date().toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    // Precargar clientes al abrir la app (en segundo plano)
+    precargarClientes();
   </script>
 
 </body>
