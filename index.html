@@ -773,9 +773,6 @@
       }
     }
 
-    // ============================================================
-    // CACHÉ DE CLIENTES
-    // ============================================================
     function leerClientesCache() {
       try {
         const data = localStorage.getItem(CACHE_KEY);
@@ -799,9 +796,6 @@
       }
     }
 
-    // ============================================================
-    // PANEL LATERAL DE CLIENTES
-    // ============================================================
     function renderizarListaClientes(clientes) {
       const lista = document.getElementById('panelLista');
 
@@ -865,9 +859,6 @@
       cargarDeuda();
     }
 
-    // ============================================================
-    // CARGAR DEUDA
-    // ============================================================
     async function cargarDeuda() {
       const nombre = document.getElementById('nombreInput').value.trim();
       if (!nombre) { showToast('Escribe un nombre válido', true); return; }
@@ -908,7 +899,7 @@
             <div class="ledger-item-qty">Cantidad: ${producto.cantidad}</div>
           </div>
           <div class="ledger-item-amount">₡${producto.monto.toLocaleString('es-CR')}</div>
-          <button class="btn-pagado" data-idunico="${producto.idUnico}">Pagar</button>
+          <button class="btn-pagado" data-fila="${producto.filaReal}">Pagar</button>
         `;
         list.appendChild(li);
       });
@@ -922,9 +913,6 @@
       if (btn) btn.classList.add('visible');
     }
 
-    // ============================================================
-    // GENERAR FACTURA
-    // ============================================================
     async function generarFactura() {
       if (!clienteActual) {
         showToast('Primero busca un cliente', true);
@@ -961,9 +949,6 @@
       showToast('Factura generada: ' + nombre);
     }
 
-    // ============================================================
-    // ACTUALIZAR SOLO TOTALES
-    // ============================================================
     async function actualizarTotalesEnSegundoPlano(nombre) {
       const response = await llamarAPI('obtenerDeudaCliente', { nombre: nombre });
       if (response.success) {
@@ -981,9 +966,6 @@
       }
     }
 
-    // ============================================================
-    // ABONAR (usa los totales que devuelve el backend)
-    // ============================================================
     async function abonar() {
       if (!clienteActual) { showToast('Primero busca un cliente', true); return; }
       const monto = document.getElementById('abonoInput').value;
@@ -995,7 +977,6 @@
         showToast(response.message);
         document.getElementById('abonoInput').value = '';
 
-        // Actualizar SOLO los totales, sin volver a buscar productos.
         if (typeof response.totalAbonos !== 'undefined') {
           document.getElementById('totalAbonos').innerText = '₡' + (response.totalAbonos || 0).toLocaleString('es-CR');
           document.getElementById('totalDeuda').innerText = '₡' + (response.totalDeuda || 0).toLocaleString('es-CR');
@@ -1007,25 +988,30 @@
     }
 
     // ============================================================
-    // PAGAR PRODUCTO INDIVIDUAL
+    // PAGAR PRODUCTO INDIVIDUAL (ahora manda la FILA real)
     // ============================================================
     document.getElementById('productosList').addEventListener('click', async function(e) {
       const boton = e.target.closest('.btn-pagado');
       if (!boton) return;
 
-      const idUnico = boton.dataset.idunico;
+      const fila = Number(boton.dataset.fila);
+      if (!fila || fila < 2) {
+        showToast('No se pudo identificar el producto', true);
+        return;
+      }
+
       boton.disabled = true;
       boton.classList.add('procesando');
       boton.innerText = '...';
 
-      const response = await llamarAPI('pagarProducto', { idUnico: idUnico });
+      const response = await llamarAPI('pagarProducto', { fila: fila });
 
       if (response.success) {
-        const fila = boton.closest('.ledger-item');
-        if (fila) {
-          fila.classList.add('disolviendo');
+        const filaItem = boton.closest('.ledger-item');
+        if (filaItem) {
+          filaItem.classList.add('disolviendo');
           setTimeout(function() {
-            fila.remove();
+            filaItem.remove();
             revisarListaVacia();
           }, 500);
         }
@@ -1038,9 +1024,6 @@
       }
     });
 
-    // ============================================================
-    // MODAL DE CONFIRMACIÓN
-    // ============================================================
     function mostrarConfirmacion(mensaje) {
       return new Promise(function(resolve) {
         const overlay = document.getElementById('modalConfirmar');
@@ -1065,9 +1048,6 @@
       });
     }
 
-    // ============================================================
-    // PAGAR TODO
-    // ============================================================
     async function pagarTodo() {
       if (!clienteActual) { showToast('Primero busca un cliente', true); return; }
       const confirmado = await mostrarConfirmacion('¿Marcar todos los productos pendientes de ' + clienteActual + ' como pagados?');
@@ -1092,9 +1072,6 @@
       }
     }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
     function actualizarDonut(abonos, deuda) {
       const total = abonos + deuda;
       const porcentaje = total > 0 ? (abonos / total) * 100 : 0;
@@ -1110,9 +1087,6 @@
       setTimeout(() => { toast.className = 'toast'; }, 3000);
     }
 
-    // ============================================================
-    // INICIALIZACIÓN
-    // ============================================================
     document.getElementById('fechaConsultaLabel').innerText = new Date().toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' });
 
     precargarClientes();
