@@ -1,1 +1,921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cicada 3301</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
+  <link rel="apple-touch-icon" href="icono-192.png">
+  <meta name="theme-color" content="#EEF0F3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Cicada 3301">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap');
 
+    :root{
+      --bg: #EEF0F3;
+      --card: #EEF0F3;
+      --ink: #2B2F36;
+      --ink-soft: #868C97;
+      --green: #34C759;
+      --green-soft: #DDF3E2;
+      --green-deep: #1F6E52;
+      --brick: #C0392B;
+      --blue: #007AFF;
+      --shadow-dark: #C8CCD2;
+      --shadow-light: #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .page {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 22px 20px 0;
+    }
+
+    /* HEADER */
+    header {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+      min-height: 42px;
+    }
+    .brand { display: flex; align-items: baseline; gap: 6px; }
+    .brand-name {
+      font-family: 'Fraunces', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.2px;
+    }
+    .brand-mark {
+      font-family: 'Fraunces', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.2px;
+    }
+    .icon-btn {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: var(--card);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--blue);
+      box-shadow:
+        -3px -3px 8px var(--shadow-light),
+        3px 3px 8px var(--shadow-dark);
+      transition: all 0.15s ease;
+    }
+    .icon-btn:active {
+      box-shadow:
+        inset -2px -2px 6px var(--shadow-light),
+        inset 2px 2px 6px var(--shadow-dark);
+    }
+
+    /* LOOKUP FIELD */
+    .lookup { margin-bottom: 24px; }
+
+    .lookup-field {
+      display: flex;
+      align-items: center;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px 18px;
+      gap: 10px;
+      box-shadow:
+        -5px -5px 14px var(--shadow-light),
+        5px 5px 14px var(--shadow-dark);
+    }
+    .lookup-field input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+    .lookup-field input:focus,
+    .lookup-field input:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+    .lookup-field input::placeholder {
+      color: var(--ink-soft);
+      font-weight: 400;
+    }
+    .lookup-go {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--blue);
+      display: flex;
+      padding: 4px;
+      border-radius: 50%;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .lookup-go:focus,
+    .lookup-go:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+    .lookup-go:active {
+      transform: scale(0.85);
+    }
+
+    /* LEDGER CARD */
+    .ledger-card {
+      background: var(--card);
+      border-radius: 20px;
+      margin: 18px 0 30px;
+      padding: 26px 22px;
+      box-shadow:
+        -5px -5px 14px var(--shadow-light),
+        5px 5px 14px var(--shadow-dark);
+    }
+
+    .titulo-centrado {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .titulo-centrado .titulo-principal {
+      font-family: 'Fraunces', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.2px;
+    }
+    .titulo-centrado .titulo-fecha {
+      font-family: 'Fraunces', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.2px;
+      margin-left: 6px;
+    }
+
+    .figures-columnas {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+    .columna {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .columna-label {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+    }
+    .columna-valor {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+    .columna-valor.abonado { color: var(--green-deep); }
+    .columna-valor.saldo { color: var(--brick); }
+    .columna-divider {
+      width: 1px;
+      background: var(--shadow-dark);
+      align-self: stretch;
+      margin: 0 10px;
+      opacity: 0.5;
+    }
+
+    .progress-track {
+      height: 8px;
+      border-radius: 5px;
+      background: var(--bg);
+      overflow: hidden;
+      margin-bottom: 8px;
+      box-shadow:
+        inset -1px -1px 3px var(--shadow-light),
+        inset 1px 1px 3px var(--shadow-dark);
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--green-deep), var(--green));
+      border-radius: 5px;
+      transition: width 0.6s ease;
+    }
+    .progress-caption {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+    }
+    .progress-caption span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* PRODUCTS */
+    .products-title {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+    .products-list { list-style: none; margin-bottom: 210px; }
+    .ledger-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 4px;
+      border-bottom: 1px solid var(--shadow-dark);
+    }
+    .ledger-item:first-child { border-top: 1px solid var(--shadow-dark); }
+    .ledger-item-date {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+      width: 48px;
+      flex-shrink: 0;
+      text-transform: lowercase;
+    }
+    .ledger-item-main { flex: 1; min-width: 0; }
+    .ledger-item-name {
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ledger-item-qty {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 2px;
+    }
+    .ledger-item-amount {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      flex-shrink: 0;
+    }
+    .btn-pagado {
+      flex-shrink: 0;
+      min-width: 78px;
+      border: none;
+      background: var(--card);
+      color: var(--green-deep);
+      font-family: 'Inter', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow:
+        -2px -2px 6px var(--shadow-light),
+        2px 2px 6px var(--shadow-dark);
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .btn-pagado:disabled {
+      cursor: default;
+    }
+    .btn-pagado.procesando {
+      box-shadow:
+        inset -2px -2px 6px var(--shadow-light),
+        inset 2px 2px 6px var(--shadow-dark);
+      color: var(--ink-soft);
+    }
+
+    @keyframes disolver {
+      0%   { opacity: 1;   transform: scale(1);    filter: blur(0px); }
+      55%  { opacity: 0.5; transform: scale(0.92); filter: blur(2px); }
+      100% { opacity: 0;   transform: scale(0.8);  filter: blur(6px); }
+    }
+    .ledger-item.disolviendo {
+      animation: disolver 0.5s ease forwards;
+      pointer-events: none;
+    }
+
+    .products-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .btn-pagar-todo {
+      display: none;
+      border: none;
+      background: transparent;
+      color: var(--brick);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+    .empty-state {
+      padding: 24px 4px;
+      color: var(--ink-soft);
+      font-size: 14px;
+      border-top: 1px solid var(--shadow-dark);
+      border-bottom: 1px solid var(--shadow-dark);
+    }
+
+    /* ACTION BAR */
+    .action-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg);
+      padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    }
+    .action-inner {
+      max-width: 520px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .amount-field {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 0 16px;
+      box-shadow:
+        -3px -3px 8px var(--shadow-light),
+        3px 3px 8px var(--shadow-dark);
+    }
+    .amount-field .currency {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--ink-soft);
+      font-size: 16px;
+      margin-right: 4px;
+    }
+    .amount-field input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      color: var(--ink);
+      width: 100%;
+      padding: 15px 0;
+    }
+    .amount-field input:focus,
+    .amount-field input:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+    .amount-field input::placeholder {
+      color: var(--ink-soft);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-icon-accion {
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      background: var(--blue);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow:
+        -2px -2px 8px rgba(0,122,255,0.25),
+        3px 3px 10px rgba(0,122,255,0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .btn-icon-accion:active {
+      transform: scale(0.94);
+      box-shadow:
+        inset -2px -2px 6px rgba(0,0,0,0.1),
+        inset 2px 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .btn-pdf-factura {
+      flex-shrink: 0;
+      width: 0;
+      height: 52px;
+      margin-left: -10px;
+      border-radius: 14px;
+      border: none;
+      background: var(--card);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      padding: 0;
+      opacity: 0;
+      box-shadow:
+        -3px -3px 8px var(--shadow-light),
+        3px 3px 8px var(--shadow-dark);
+      transition: width 0.3s ease, opacity 0.25s ease, margin-left 0.3s ease, box-shadow 0.12s ease;
+    }
+    .btn-pdf-factura.visible {
+      width: 52px;
+      margin-left: 0;
+      opacity: 1;
+    }
+    .btn-pdf-factura:active {
+      box-shadow:
+        inset -2px -2px 6px var(--shadow-light),
+        inset 2px 2px 6px var(--shadow-dark);
+    }
+    .btn-pdf-factura svg {
+      flex-shrink: 0;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      top: 18px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-deep); color: #FFFFFF;
+      padding: 11px 20px; border-radius: 10px;
+      font-size: 13.5px; font-weight: 500;
+      z-index: 1000;
+      opacity: 0; transition: opacity 0.25s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    .toast.error { background: var(--brick); }
+    .toast.show { opacity: 1; }
+
+    /* MODAL DE CONFIRMACIÓN */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(43,47,54,0.35);
+      z-index: 1100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 26px 22px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow:
+        -6px -6px 16px var(--shadow-light),
+        6px 6px 16px var(--shadow-dark);
+    }
+    .modal-title {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .modal-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 14.5px;
+      color: var(--ink-soft);
+      line-height: 1.4;
+      margin-bottom: 22px;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1;
+      border: none;
+      border-radius: 14px;
+      padding: 13px 0;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14.5px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .modal-btn-cancelar {
+      background: var(--card);
+      color: var(--ink-soft);
+      box-shadow:
+        -3px -3px 8px var(--shadow-light),
+        3px 3px 8px var(--shadow-dark);
+    }
+    .modal-btn-cancelar:active {
+      box-shadow:
+        inset -2px -2px 6px var(--shadow-light),
+        inset 2px 2px 6px var(--shadow-dark);
+    }
+    .modal-btn-confirmar {
+      background: var(--blue);
+      color: #FFFFFF;
+      box-shadow:
+        -2px -2px 8px rgba(0,122,255,0.25),
+        3px 3px 10px rgba(0,122,255,0.35);
+    }
+    .modal-btn-confirmar:active {
+      transform: scale(0.96);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head><body>
+
+  <div class="page">
+    <header>
+      <div class="brand">
+        <span class="brand-name">Cicada</span>
+        <span class="brand-mark">3301</span>
+      </div>
+      <button class="icon-btn" onclick="mostrarHistorial()" aria-label="Historial">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
+    </header>
+
+    <div class="lookup">
+      <div class="lookup-field">
+        <input type="text" id="nombreInput" placeholder="Buscar cliente..." autocomplete="off" onkeypress="if(event.key==='Enter') cargarDeuda()">
+        <button class="lookup-go" onclick="cargarDeuda()" aria-label="Buscar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="ledger-card">
+      <div class="titulo-centrado">
+        <span class="titulo-principal">Estado Cuenta</span>
+        <span class="titulo-fecha" id="fechaConsultaLabel"></span>
+      </div>
+
+      <div class="figures-columnas">
+        <div class="columna">
+          <div class="columna-label">Saldo Abonado</div>
+          <div class="columna-valor abonado" id="totalAbonos">₡0</div>
+        </div>
+
+        <div class="columna-divider"></div>
+
+        <div class="columna">
+          <div class="columna-label">Saldo Pendiente</div>
+          <div class="columna-valor saldo" id="totalDeuda">₡0</div>
+        </div>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="donutProgress"></div>
+      </div>
+      <div class="progress-caption"><span id="porcentaje">0%</span> pagado</div>
+    </div>
+
+    <div class="products-header">
+      <div class="products-title">Productos pendientes</div>
+      <button class="btn-pagar-todo" id="btnPagarTodo" onclick="pagarTodo()">Pagar todo</button>
+    </div>
+    <ul class="products-list" id="productosList"></ul>
+  </div>
+
+  <div class="action-bar">
+    <div class="action-inner">
+      <div class="amount-field">
+        <span class="currency">₡</span>
+        <input type="number" id="abonoInput" placeholder="Abona aquí" min="0">
+      </div>
+
+      <button class="btn-icon-accion" id="btnAbonar" aria-label="Abonar" onclick="abonar()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <polyline points="12 8 16 12 12 16"></polyline>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+      </button>
+
+      <button class="btn-pdf-factura" id="btnFactura" aria-label="Generar factura" onclick="generarFactura()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <polyline points="9 15 12 18 15 15"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="modal-overlay" id="modalConfirmar">
+    <div class="modal-box">
+      <div class="modal-title">Pagar todo</div>
+      <div class="modal-text" id="modalConfirmarTexto"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancelar" id="modalConfirmarCancelar">Cancelar</button>
+        <button class="modal-btn modal-btn-confirmar" id="modalConfirmarAceptar">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbz1hZswWqWfMJRDmZtx_7iGqr-oexzTPlLPiTBRxvETsZHoft4SuQZ_spnfiIJ-SnLO/exec';
+    let clienteActual = '';
+
+    // ============================================================
+    // LLAMADA GENÉRICA AL BACKEND (reemplaza google.script.run)
+    // ============================================================
+    async function llamarAPI(action, payload) {
+      const body = Object.assign({ action: action }, payload || {});
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body),
+          redirect: 'follow'
+        });
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        return { success: false, message: 'Error de conexión: ' + err };
+      }
+    }
+
+    // ============================================================
+    // CARGAR DEUDA
+    // ============================================================
+    async function cargarDeuda() {
+      const nombre = document.getElementById('nombreInput').value.trim();
+      if (!nombre) { showToast('Escribe un nombre válido', true); return; }
+      clienteActual = nombre;
+
+      const response = await llamarAPI('obtenerDeudaCliente', { nombre: nombre });
+
+      if (!response.success) {
+        showToast('Error: ' + response.message, true);
+        return;
+      }
+
+      document.getElementById('totalAbonos').innerText = '₡' + (response.totalAbonos || 0).toLocaleString('es-CR');
+      document.getElementById('totalDeuda').innerText = '₡' + (response.totalDeuda || 0).toLocaleString('es-CR');
+
+      actualizarDonut(response.totalAbonos, response.totalDeuda);
+      mostrarBotonFactura();
+
+      const list = document.getElementById('productosList');
+      list.innerHTML = '';
+
+      if (!response.productos || response.productos.length === 0) {
+        list.innerHTML = '<li class="empty-state">Sin productos pendientes. Cuenta al día.</li>';
+        document.getElementById('btnPagarTodo').style.display = 'none';
+        return;
+      }
+
+      response.productos.forEach((producto) => {
+        const li = document.createElement('li');
+        li.className = 'ledger-item';
+
+        const fechaFormateada = new Date(producto.fecha).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
+
+        li.innerHTML = `
+          <div class="ledger-item-date">${fechaFormateada}</div>
+          <div class="ledger-item-main">
+            <div class="ledger-item-name">${producto.producto}</div>
+            <div class="ledger-item-qty">Cantidad: ${producto.cantidad}</div>
+          </div>
+          <div class="ledger-item-amount">₡${producto.monto.toLocaleString('es-CR')}</div>
+          <button class="btn-pagado" data-idunico="${producto.idUnico}">Pagar</button>
+        `;
+        list.appendChild(li);
+      });
+
+      document.getElementById('btnPagarTodo').style.display =
+        response.productos.length > 0 ? 'block' : 'none';
+    }
+
+    function mostrarBotonFactura() {
+      const btn = document.getElementById('btnFactura');
+      if (btn) btn.classList.add('visible');
+    }
+
+    // ============================================================
+    // GENERAR FACTURA (PDF)
+    // ============================================================
+    async function generarFactura() {
+      if (!clienteActual) {
+        showToast('Primero busca un cliente', true);
+        return;
+      }
+
+      const btn = document.getElementById('btnFactura');
+      btn.disabled = true;
+
+      const response = await llamarAPI('generarPDFEstadoCuenta', { nombre: clienteActual });
+
+      btn.disabled = false;
+
+      if (!response.success) {
+        showToast(response.message, true);
+        return;
+      }
+
+      const bytes = response.pdf;
+      const nombre = response.nombreArchivo;
+
+      const blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+
+      showToast('Factura generada: ' + nombre);
+    }
+
+    // ============================================================
+    // ACTUALIZAR SOLO TOTALES
+    // ============================================================
+    async function actualizarTotalesEnSegundoPlano(nombre) {
+      const response = await llamarAPI('obtenerDeudaCliente', { nombre: nombre });
+      if (response.success) {
+        document.getElementById('totalAbonos').innerText = '₡' + (response.totalAbonos || 0).toLocaleString('es-CR');
+        document.getElementById('totalDeuda').innerText = '₡' + (response.totalDeuda || 0).toLocaleString('es-CR');
+        actualizarDonut(response.totalAbonos, response.totalDeuda);
+      }
+    }
+
+    // ============================================================
+    // REVISAR SI LA LISTA QUEDÓ VACÍA
+    // ============================================================
+    function revisarListaVacia() {
+      const list = document.getElementById('productosList');
+      if (list.querySelectorAll('.ledger-item').length === 0) {
+        list.innerHTML = '<li class="empty-state">Sin productos pendientes. Cuenta al día.</li>';
+        document.getElementById('btnPagarTodo').style.display = 'none';
+      }
+    }
+
+    // ============================================================
+    // ABONAR
+    // ============================================================
+    async function abonar() {
+      if (!clienteActual) { showToast('Primero busca un cliente', true); return; }
+      const monto = document.getElementById('abonoInput').value;
+      if (!monto || monto <= 0) { showToast('Escribe un monto válido', true); return; }
+
+      const response = await llamarAPI('abonar', { nombre: clienteActual, monto: monto });
+
+      if (response.success) {
+        showToast(response.message);
+        document.getElementById('abonoInput').value = '';
+        cargarDeuda();
+      } else {
+        showToast(response.message, true);
+      }
+    }
+
+    // ============================================================
+    // PAGAR PRODUCTO INDIVIDUAL
+    // ============================================================
+    document.getElementById('productosList').addEventListener('click', async function(e) {
+      const boton = e.target.closest('.btn-pagado');
+      if (!boton) return;
+
+      const idUnico = boton.dataset.idunico;
+      boton.disabled = true;
+      boton.classList.add('procesando');
+      boton.innerText = '...';
+
+      const response = await llamarAPI('pagarProducto', { idUnico: idUnico });
+
+      if (response.success) {
+        const fila = boton.closest('.ledger-item');
+        if (fila) {
+          fila.classList.add('disolviendo');
+          setTimeout(function() {
+            fila.remove();
+            revisarListaVacia();
+          }, 500);
+        }
+        actualizarTotalesEnSegundoPlano(clienteActual);
+      } else {
+        showToast(response.message, true);
+        boton.disabled = false;
+        boton.classList.remove('procesando');
+        boton.innerText = 'Pagar';
+      }
+    });
+
+    // ============================================================
+    // MODAL DE CONFIRMACIÓN
+    // ============================================================
+    function mostrarConfirmacion(mensaje) {
+      return new Promise(function(resolve) {
+        const overlay = document.getElementById('modalConfirmar');
+        const texto = document.getElementById('modalConfirmarTexto');
+        const btnAceptar = document.getElementById('modalConfirmarAceptar');
+        const btnCancelar = document.getElementById('modalConfirmarCancelar');
+
+        texto.innerText = mensaje;
+        overlay.classList.add('show');
+
+        function cerrar(resultado) {
+          overlay.classList.remove('show');
+          btnAceptar.removeEventListener('click', onAceptar);
+          btnCancelar.removeEventListener('click', onCancelar);
+          resolve(resultado);
+        }
+        function onAceptar() { cerrar(true); }
+        function onCancelar() { cerrar(false); }
+
+        btnAceptar.addEventListener('click', onAceptar);
+        btnCancelar.addEventListener('click', onCancelar);
+      });
+    }
+
+    // ============================================================
+    // PAGAR TODO
+    // ============================================================
+    async function pagarTodo() {
+      if (!clienteActual) { showToast('Primero busca un cliente', true); return; }
+      const confirmado = await mostrarConfirmacion('¿Marcar todos los productos pendientes de ' + clienteActual + ' como pagados?');
+      if (!confirmado) return;
+
+      const response = await llamarAPI('pagarTodo', { nombre: clienteActual });
+
+      if (response.success) {
+        const filas = document.querySelectorAll('#productosList .ledger-item');
+        filas.forEach(function(fila, index) {
+          setTimeout(function() {
+            fila.classList.add('disolviendo');
+            setTimeout(function() {
+              fila.remove();
+              revisarListaVacia();
+            }, 500);
+          }, index * 90);
+        });
+        actualizarTotalesEnSegundoPlano(clienteActual);
+      } else {
+        showToast(response.message, true);
+      }
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function actualizarDonut(abonos, deuda) {
+      const total = abonos + deuda;
+      const porcentaje = total > 0 ? (abonos / total) * 100 : 0;
+
+      document.getElementById('donutProgress').style.width = porcentaje + '%';
+      document.getElementById('porcentaje').innerText = Math.round(porcentaje) + '%';
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => { toast.className = 'toast'; }, 3000);
+    }
+
+    function mostrarHistorial() {
+      showToast('Historial próximamente');
+    }
+
+    document.getElementById('fechaConsultaLabel').innerText = new Date().toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' });
+  </script>
+
+</body>
+</html>
